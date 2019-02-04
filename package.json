@@ -1,0 +1,26 @@
+{
+  "name": "quickest",
+  "version": "1.0.0",
+  "description": "Framework for Rest API development",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/JonatanFlores/quickest.git"
+  },
+  "keywords": [
+    "Simple",
+    "Fast",
+    "Framework",
+    "API",
+    "Development"
+  ],
+  "author": "Jonatan Flores <jonatafloress@gmail.com>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/JonatanFlores/quickest/issues"
+  },
+  "homepage": "https://github.com/JonatanFlores/quickest#readme"
+}
