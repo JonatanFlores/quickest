@@ -1,7 +1,7 @@
-// Dependencies
 const http = require("http");
-const url = require("url");
-const StringDecoder = require("string_decoder").StringDecoder;
+const Request = require("./Request");
+const Response = require("./Response");
+const Router = require("./Router");
 
 /**
  * App
@@ -14,99 +14,75 @@ const StringDecoder = require("string_decoder").StringDecoder;
  */
 class App {
   /**
-   * Constructor
+   * Constructor.
    */
   constructor() {
-    // The server should respond to all requests with a string
-    this.server = http.createServer((request, response) => {
-      this.request = request;
-      this.response = response;
-      this.url = this.getURL();
-      this.path = this.getPath();
-      this.queryString = this.getQueryString();
-      this.method = this.getMethod();
-      this.headers = this.getHeaders();
-      this.payload = this.getPayload(payload => {
-        // Send a response
-        this.response.end("Hello World\n");
-
-        // Log the request path
-        console.log("Request received with this payload ", payload);
-      });
-    });
+    this.request = new Request();
+    this.response = new Response();
+    this.router = new Router();
+    this.routes = {
+      get: {},
+      post: {},
+      put: {},
+      delete: {}
+    };
   }
 
   /**
-   * Get the URL and parse it
+   * Store get routes.
    *
-   * @return {Url}
+   * @param {string} path
+   * @param {callback} callback
    */
-  getURL() {
-    return url.parse(this.request.url, true);
+  get(path, callback) {
+    this.routes.get[path.toString()] = { path, callback };
   }
 
   /**
-   * Get the path
+   * Store post routes.
    *
-   * @return {String}
+   * @param {string} path
+   * @param {callback} callback
    */
-  getPath() {
-    return this.url.pathname.replace(/^\/+|\/+$/g, "");
+  post(path, callback) {
+    this.routes.post[path.toString()] = { path, callback };
   }
 
   /**
-   * Get the query string as an object
+   * Route executed if no other route is found.
    *
-   * @return {Object}
+   * @param {string} data
+   * @param {callback} callback
    */
-  getQueryString() {
-    return this.url.query;
+  notFound(callback) {
+    this.routes.notFound = callback;
   }
 
   /**
-   * Get the HTTP method
+   * The server should respond to all requests with a string.
    *
-   * @return {String}
+   * @param {http.IncomingMessage} request
+   * @param {http.ServerResponse} response
    */
-  getMethod() {
-    return this.request.method.toLowerCase();
-  }
+  handle(request, response) {
+    this.request.setRequest(request);
+    this.response.setResponse(response);
 
-  /**
-   * Get the headers as an object
-   *
-   * @return {Object}
-   */
-  getHeaders() {
-    return this.request.headers;
-  }
+    this.router.setRequest(this.request);
+    this.router.setResponse(this.response);
+    this.router.setRoutes(this.routes);
 
-  /**
-   * Get the payload, if any
-   *
-   */
-  getPayload(callback) {
-    let decoder = new StringDecoder("utf-8");
-    let buffer = "";
-
-    this.request.on("data", data => {
-      buffer += decoder.write(data);
-    });
-
-    this.request.on("end", () => {
-      buffer += decoder.end();
-      callback(buffer);
+    this.request.getPayload(payload => {
+      this.router.dispatch();
     });
   }
 
   /**
    * Start the server
-   *
-   * @param {Number} port
-   * @param {Function} callback
    */
-  listen(port, callback) {
-    this.server.listen(port, callback);
+  listen() {
+    const server = http.createServer(this.handle.bind(this));
+    server.listen.apply(server, arguments);
   }
 }
 
