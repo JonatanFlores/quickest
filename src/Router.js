@@ -76,6 +76,7 @@ class Router {
         const payloadStr = JSON.stringify(payload);
 
         // Return the response
+        this.response.http.setHeader("Content-Type", "application/json");
         this.response.http.writeHead(statusCode);
         this.response.http.end(payloadStr);
 
