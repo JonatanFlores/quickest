@@ -1,3 +1,3 @@
-const app = require("./src/App");
+"use strict";
 
-module.exports = app;
+module.exports = require("./src/Quickest");

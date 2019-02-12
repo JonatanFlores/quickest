@@ -1,3 +1,5 @@
+"use strict";
+
 const url = require("url");
 const StringDecoder = require("string_decoder").StringDecoder;
 
@@ -18,47 +20,29 @@ class Request {
    */
   setRequest(request) {
     this.http = request;
-    this.url = this.getURL();
-    this.path = this.getPath();
     this.method = this.getMethod();
     this.headers = this.getHeaders();
-    this.payload = {};
+    this.url = this.getRequestUri();
+    this.query = this.getQueryString();
+    this.params = {};
+    this.body = "";
   }
 
   /**
-   * Get the URL and parse it.
+   * Parameters on the request uri matched by the route
    *
-   * @return {Url}
+   * @param {Object} params
    */
-  getURL() {
-    return url.parse(this.http.url, true);
+  setParams(params) {
+    this.params = params;
   }
 
   /**
-   * Get the path.
-   *
-   * @return {String}
-   */
-  getPath() {
-    return this.url.pathname.replace(/^\/+|\/+$/g, "");
-  }
-
-  /**
-   * Get the query string as an object.
-   *
-   * @return {Object}
-   */
-  getQueryString() {
-    return this.url.query;
-  }
-
-  /**
-   * Get the HTTP method.
-   *
-   * @return {String}
+   * Return the current method or default to GET
    */
   getMethod() {
-    return this.http.method.toLowerCase();
+    const method = this.http.method || "GET";
+    return method.toUpperCase();
   }
 
   /**
@@ -71,22 +55,44 @@ class Request {
   }
 
   /**
-   * Get the payload, if any.
+   * Return the current request uri
+   *
+   * @return {string}
+   */
+  getRequestUri() {
+    return this.http.url;
+  }
+
+  /**
+   * Return the query string part of the requested uri as an object.
+   *
+   * @return {Object}
+   */
+  getQueryString() {
+    return url.parse(this.http.url, true).query;
+  }
+
+  /**
+   * Executes the request
    *
    * @param {callback} callback
    */
-  getPayload(callback) {
-    let decoder = new StringDecoder("utf-8");
-    let buffer = "";
+  execute(callback) {
+    // Object for decoding the data stream
+    const decoder = new StringDecoder("utf-8");
 
+    // Listen for data sent by the client
     this.http.on("data", data => {
-      buffer += decoder.write(data);
+      this.body += decoder.write(data);
     });
 
+    // Check the completiong of the request
     this.http.on("end", () => {
-      buffer += decoder.end();
-      this.payload = buffer;
-      callback(buffer);
+      this.body += decoder.end();
+
+      if (typeof callback === "function") {
+        callback();
+      }
     });
   }
 }
