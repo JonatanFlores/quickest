@@ -20,19 +20,43 @@ const app = new Quickest();
 const port = process.env.PORT || 3001;
 ```
 
-GET Route: http://localhost:3001/sample
+POST Route: http://localhost:3001/posts
 
 ```
-app.get("sample", (data, callback) => {
-  callback(200, { name: "sample route" });
+app.post("/posts", (req, res) => {
+  res.status(201).send("Create post");
 });
 ```
 
-POST Route: http://localhost:3001/sample
+PUT Route: http://localhost:3001/posts/12
 
 ```
-app.post("sample", (data, callback) => {
-  callback(200, { name: "sample route" });
+app.put("/posts/:id", (req, res) => {
+  return res.send(`Edit post: ${req.params.id}`);
+});
+```
+
+GET Route: http://localhost:3001/posts
+
+```
+app.get("/posts", (req, res) => {
+  return res.send("Get all posts");
+});
+```
+
+GET Route: http://localhost:3001/posts/123
+
+```
+app.get("/posts/:id", (req, res) => {
+  return res.send("Get post by id");
+});
+```
+
+GET Route: http://localhost:3001/posts/123/my-test-slug
+
+```
+app.get("/posts/:id/:slug", (req, res) => {
+  return res.send("Get post by id and slug");
 });
 ```
 
