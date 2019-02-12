@@ -63,8 +63,8 @@ app.get("/posts/:id/:slug", (req, res) => {
 NOT FOUND Route:
 
 ```
-app.notFound((data, callback) => {
-  callback(404);
+app.notFound((req, res) => {
+  return res.status(404).send("404 Not Found");
 });
 ```
 

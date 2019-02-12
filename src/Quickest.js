@@ -23,6 +23,7 @@ class Quickest {
     this.response = new Response();
     this.router = new Router();
     this.addedExceptions = [];
+    this.notFoundModified = false;
 
     return this.__call();
   }
@@ -51,8 +52,42 @@ class Quickest {
     if (this.router.dispatch()) {
       this.router.execute();
     } else {
-      console.log("Route was not found!");
+      if (typeof this.notFoundModified === "function") {
+        this.notFoundModified(this.request, this.response);
+      } else {
+        this.notFoundDefault(this.request, this.response);
+      }
     }
+  }
+
+  /**
+   * Default not found page
+   */
+  notFound(callback) {
+    if (typeof callback === "function") {
+      this.notFoundModified = callback;
+    }
+  }
+
+  /**
+   * Default not found page
+   */
+  notFoundDefault(req, res) {
+    const page = `
+      <!DOCTYPE html>
+      <html lang="en">
+      <head>
+          <meta charset="UTF-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+          <meta http-equiv="X-UA-Compatible" content="ie=edge">
+          <title>Page Not Found</title>
+      </head>
+      <body>
+          <h1>Page Not Found</h1>
+      </body>
+      </html>
+    `;
+    return res.status(404).send(page.replace(/^\s+|\s+$/gm, ""));
   }
 
   /**
