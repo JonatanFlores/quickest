@@ -1,6 +1,6 @@
 {
   "name": "quickest",
-  "version": "0.0.3",
+  "version": "0.0.5",
   "description": "Framework for Rest API development",
   "main": "index.js",
   "scripts": {
