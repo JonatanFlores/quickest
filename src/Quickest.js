@@ -66,12 +66,6 @@ class Quickest {
         }
       }
     } catch (err) {
-      // Set an error message into the console
-      const error = `
-        Error: ${err.name}
-        Message: ${err.message}
-      `;
-
       // Displa an error page for the client
       const page = `
         <!DOCTYPE html>
@@ -87,12 +81,8 @@ class Quickest {
         </body>
         </html>
       `;
-
-      console.log("--------------------------------");
-      console.log(error.replace(/^\s+|\s+$/gm, ""));
-      console.log("--------------------------------");
-
       this.response.status(500).send(page.replace(/^\s+|\s+$/gm, ""));
+      console.log(err);
     }
   }
 
@@ -162,13 +152,17 @@ class Quickest {
           return this.router.route(methodUpper, path, callable, conditions);
         }
       };
-    } else if ($method === "group" && arguments.length === 2) {
+    } else if (method === "group") {
       return function() {
-        let path = arguments[0] || undefined;
-        let callable = arguments[1] || undefined;
+        if (arguments.length === 2) {
+          let path = arguments[0] || undefined;
+          let callable = arguments[1] || undefined;
 
-        // TODO: validate the callable
-        return this.router.group(path, callable);
+          // TODO: validate the callable
+          return this.router.group(path, callable);
+        } else {
+          this.addedExceptions.push(`${method} must have a callback`);
+        }
       };
     } else {
       this.addedExceptions.push(`${method} was not implemented`);

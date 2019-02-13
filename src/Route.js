@@ -18,10 +18,34 @@ class Route {
    * @param {Object} conditions
    */
   constructor(pattern, callable, conditions) {
-    this.params = {};
     this.pattern = pattern;
     this.callable = callable;
     this.conditions = conditions;
+
+    // Initialize properties
+    this.name = null;
+    this.params = {};
+    this.middlewares = [];
+    this.groupPrefix = null;
+    this.options = [];
+  }
+
+  /**
+   * Set the group prefix of a routes collection
+   *
+   * @param {string} prefix
+   */
+  setGroupPrefix(prefix) {
+    this.groupPrefix = prefix;
+  }
+
+  /**
+   * Geth the group prefix of a routes collection
+   *
+   * @return {string}
+   */
+  getGroupPrefix() {
+    return this.groupPrefix;
   }
 
   /**

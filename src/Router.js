@@ -23,8 +23,15 @@ class Router {
       DELETE: []
     };
 
+    // Initialize properties
+    this.routePrefix = null;
+    this.routeNames = [];
+    this.lastRouteMethod = null;
     this.canditateRoutes = [];
     this.matchedRoute = {};
+    this.middlewares = [];
+    this.groupMiddlewares = [];
+    this.currentGroup = null;
   }
 
   /**
@@ -54,8 +61,59 @@ class Router {
    * @param {null|Array} conditions
    */
   route(method, pattern, callable, conditions) {
-    const routeObject = new Route(pattern, callable, conditions);
+    // reset currentGroups so future routes won't inherit middlewares from them
+    this.currentGroup = null;
+
+    let methodUpper = method.toUpperCase();
+    let validPattern = this._validatePath(pattern);
+
+    // Check if the route has a prefix
+    if (typeof this.routePrefix === "string" && this.routePrefix.length > 0) {
+      validPattern = this.routePrefix + pattern;
+    }
+
+    // Generate a route taking in consideration the prefix
+    let routeObject = new Route(validPattern, callable, conditions);
+
+    // Set the group prefix to the `Route` object
+    if (typeof this.routePrefix === "string" && this.routePrefix.length > 0) {
+      routeObject.setGroupPrefix(this.routePrefix);
+    }
+
+    // Attach the route object to routes array
     this.routes[method].push(routeObject);
+    this.lastRouteMethod = methodUpper;
+    return this;
+  }
+
+  /**
+   * Return a collection of Route objects
+   *
+   * @return {Array}
+   */
+  getRoutes() {
+    return this.routes;
+  }
+
+  /**
+   * Defines the prefix in which the routes will be grouped by
+   *
+   * @param {string} prefix
+   * @param {Function} callback
+   */
+  group(prefix, callback) {
+    this.routePrefix = prefix;
+
+    if (typeof callback === "function") {
+      callback();
+    } else {
+      throw new Error("group MUST have a function callback");
+    }
+
+    this.routePrefix = null;
+    this.groupMiddlewares[prefix] = [];
+    this.currentGroup = prefix;
+
     return this;
   }
 

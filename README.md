@@ -60,6 +60,16 @@ app.get("/posts/:id/:slug", (req, res) => {
 });
 ```
 
+GROUP Route: http://localhost:3001/api/posts
+
+```
+app.group("/api", () => {
+  app.get("/posts", (req, res) => {
+    return res.send("API: Get all posts");
+  });
+});
+```
+
 NOT FOUND Route:
 
 ```
