@@ -59,8 +59,9 @@ class Router {
    * @param {string} pattern
    * @param {Function} callable
    * @param {null|Array} conditions
+   * @param {mixed} middlewares
    */
-  route(method, pattern, callable, conditions) {
+  route(method, pattern, callable, conditions, middlewares) {
     // reset currentGroups so future routes won't inherit middlewares from them
     this.currentGroup = null;
 
@@ -73,7 +74,12 @@ class Router {
     }
 
     // Generate a route taking in consideration the prefix
-    let routeObject = new Route(validPattern, callable, conditions);
+    let routeObject = new Route(
+      validPattern,
+      callable,
+      conditions,
+      middlewares
+    );
 
     // Set the group prefix to the `Route` object
     if (typeof this.routePrefix === "string" && this.routePrefix.length > 0) {
@@ -227,22 +233,29 @@ class Router {
     const route = this.getMatchedRoute();
     const callable = route.getCallable();
     const params = route.getParams();
+    const stack = [];
 
-    // TODO: Load middlewares
-    // TODO: Get the route name
-    // TODO: Get the route group prefix
-    // TODO: Group Middlewares
-    // TODO: Middlewares of routeNames stored in memory for further addition
-    // TODO: global routes above the idicated with name
+    // Route Middlewares
+    if (typeof route.middlewares !== "undefined") {
+      for (let middleware of route.middlewares) {
+        stack.push(middleware);
+      }
+    }
+
+    // Push the actual request to
+    // and of the stack
+    stack.push(callable);
 
     this.request.execute(() => {
-      if (typeof callable === "function") {
-        // Set the parameters sent on the request
-        this.request.setParams(params);
+      // Set the parameters sent on the request
+      this.request.setParams(params);
 
-        // Call function defined on one of
-        // the handler (get,post,put,delete...)
-        callable(this.request, this.response);
+      for (let fn of stack) {
+        if (typeof fn === "function") {
+          // Call function defined on one of the handler
+          // (get,post,put,delete...) or a middleware
+          fn(this.request, this.response);
+        }
       }
     });
   }

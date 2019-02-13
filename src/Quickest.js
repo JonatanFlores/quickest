@@ -136,10 +136,20 @@ class Quickest {
     if (accepted.indexOf(methodUpper) > -1) {
       return function() {
         let path = arguments[0] || undefined;
-        let callable = arguments[1] || undefined;
+        let callable = undefined;
+        let middlewares = [];
         let conditions = [];
 
-        if (arguments.length === 3) {
+        if (arguments.length > 2) {
+          middlewares = arguments[1] || undefined;
+          callable = arguments[2] || undefined;
+        } else {
+          callable = arguments[1] || undefined;
+        }
+
+        if (arguments.length === 4) {
+          conditions = arguments[3];
+        } else if (arguments.length === 3) {
           conditions = arguments[2];
         } else if (arguments.length === 2) {
           conditions = [];
@@ -149,7 +159,13 @@ class Quickest {
           this.addedExceptions.push("Invalid /[:options] pattern");
         } else {
           // TODO: validate the callable
-          return this.router.route(methodUpper, path, callable, conditions);
+          return this.router.route(
+            methodUpper,
+            path,
+            callable,
+            conditions,
+            middlewares
+          );
         }
       };
     } else if (method === "group") {
@@ -160,6 +176,13 @@ class Quickest {
 
           // TODO: validate the callable
           return this.router.group(path, callable);
+        } else if (arguments.length === 3) {
+          let path = arguments[0] || undefined;
+          let callable = arguments[1] || undefined;
+          let middlewares = arguments[1] || [];
+
+          // TODO: validate the callable
+          return this.router.group(path, callable, middlewares);
         } else {
           this.addedExceptions.push(`${method} must have a callback`);
         }

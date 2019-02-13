@@ -16,16 +16,17 @@ class Route {
    * @param {string} pattern
    * @param {Function} callable
    * @param {Object} conditions
+   * @param {mixed} middlewares
    */
-  constructor(pattern, callable, conditions) {
+  constructor(pattern, callable, conditions, middlewares) {
     this.pattern = pattern;
     this.callable = callable;
     this.conditions = conditions;
+    this.middlewares = middlewares;
 
     // Initialize properties
     this.name = null;
     this.params = {};
-    this.middlewares = [];
     this.groupPrefix = null;
     this.options = [];
   }
