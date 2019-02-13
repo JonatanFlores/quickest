@@ -43,20 +43,56 @@ class Quickest {
    * @param {http.ServerResponse} response
    */
   run(request, response) {
-    this.request.setRequest(request);
-    this.response.setResponse(response);
+    try {
+      // Collect from default node server
+      // http.IncomingMessage and http.ServerResponse
+      this.request.setRequest(request);
+      this.response.setResponse(response);
 
-    this.router.setRequest(this.request);
-    this.router.setResponse(this.response);
+      // Pass Request & and Response objects to Router
+      this.router.setRequest(this.request);
+      this.router.setResponse(this.response);
 
-    if (this.router.dispatch()) {
-      this.router.execute();
-    } else {
-      if (typeof this.notFoundModified === "function") {
-        this.notFoundModified(this.request, this.response);
+      // Run any generated exception
+      this._runAddedExceptions();
+
+      if (this.router.dispatch()) {
+        this.router.execute();
       } else {
-        this.notFoundDefault(this.request, this.response);
+        if (typeof this.notFoundModified === "function") {
+          this.notFoundModified(this.request, this.response);
+        } else {
+          this.notFoundDefault(this.request, this.response);
+        }
       }
+    } catch (err) {
+      // Set an error message into the console
+      const error = `
+        Error: ${err.name}
+        Message: ${err.message}
+      `;
+
+      // Displa an error page for the client
+      const page = `
+        <!DOCTYPE html>
+        <html lang="en">
+        <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <meta http-equiv="X-UA-Compatible" content="ie=edge">
+            <title>Internal Server Error</title>
+        </head>
+        <body>
+            <h1>Error 500 - Internal Server Error</h1>
+        </body>
+        </html>
+      `;
+
+      console.log("--------------------------------");
+      console.log(error.replace(/^\s+|\s+$/gm, ""));
+      console.log("--------------------------------");
+
+      this.response.status(500).send(page.replace(/^\s+|\s+$/gm, ""));
     }
   }
 
@@ -66,6 +102,8 @@ class Quickest {
   notFound(callback) {
     if (typeof callback === "function") {
       this.notFoundModified = callback;
+    } else {
+      this.addedExceptions.push("Invalid callback  at notFound()");
     }
   }
 
@@ -80,10 +118,10 @@ class Quickest {
           <meta charset="UTF-8">
           <meta name="viewport" content="width=device-width, initial-scale=1.0">
           <meta http-equiv="X-UA-Compatible" content="ie=edge">
-          <title>Page Not Found</title>
+          <title>Error 404 - Page Not Found</title>
       </head>
       <body>
-          <h1>Page Not Found</h1>
+          <h1>Error 404 - Page Not Found</h1>
       </body>
       </html>
     `;
@@ -118,7 +156,7 @@ class Quickest {
         }
 
         if (arguments[0] === "/[:options]") {
-          this.addedExceptions["Exception"] = "Invalid /[:options] pattern";
+          this.addedExceptions.push("Invalid /[:options] pattern");
         } else {
           // TODO: validate the callable
           return this.router.route(methodUpper, path, callable, conditions);
@@ -133,7 +171,7 @@ class Quickest {
         return this.router.group(path, callable);
       };
     } else {
-      this.addedExceptions["Exception"] = `${method} was not implemented`;
+      this.addedExceptions.push(`${method} was not implemented`);
     }
   }
 
@@ -146,6 +184,17 @@ class Quickest {
     };
 
     return new Proxy(this, handler);
+  }
+
+  /**
+   * Throw collected exceptions from Quickest object
+   */
+  _runAddedExceptions() {
+    if (this.addedExceptions.length > 0) {
+      for (let exception of this.addedExceptions) {
+        throw new Error(exception);
+      }
+    }
   }
 }
 
